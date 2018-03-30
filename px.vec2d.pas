@@ -1,4 +1,4 @@
-unit pxvec2d;
+unit px.vec2d;
 
 {$mode objfpc}{$H+}
 {$modeswitch advancedrecords}

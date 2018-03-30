@@ -41,7 +41,7 @@
         <UnitName Value="mainFrm"/>
       </Unit1>
       <Unit2>
-        <Filename Value="..\pxvec2d.pas"/>
+        <Filename Value="..\px.vec2d.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit2>
     </Units>
