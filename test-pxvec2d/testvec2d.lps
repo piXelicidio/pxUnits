@@ -9,153 +9,154 @@
         <Filename Value="testvec2d.lpr"/>
         <IsPartOfProject Value="True"/>
         <EditorIndex Value="2"/>
-        <CursorPos X="9" Y="20"/>
-        <UsageCount Value="20"/>
+        <CursorPos X="17" Y="18"/>
+        <UsageCount Value="29"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
         <Filename Value="mainfrm.pas"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="Form1"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
         <UnitName Value="mainFrm"/>
-        <TopLine Value="24"/>
-        <CursorPos X="29" Y="39"/>
-        <UsageCount Value="20"/>
+        <IsVisibleTab Value="True"/>
+        <TopLine Value="55"/>
+        <CursorPos X="48" Y="78"/>
+        <UsageCount Value="29"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="..\pxvec2d.pas"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="27"/>
-        <CursorPos X="24" Y="37"/>
-        <UsageCount Value="20"/>
+        <TopLine Value="58"/>
+        <CursorPos X="26" Y="68"/>
+        <UsageCount Value="29"/>
         <Loaded Value="True"/>
       </Unit2>
     </Units>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="mainfrm.pas"/>
-        <Caret Line="9" Column="10"/>
+        <Filename Value="..\pxvec2d.pas"/>
+        <Caret Line="122" TopLine="106"/>
       </Position1>
       <Position2>
-        <Filename Value="mainfrm.pas"/>
-        <Caret Line="21" Column="20"/>
+        <Filename Value="..\pxvec2d.pas"/>
+        <Caret Line="123" TopLine="106"/>
       </Position2>
       <Position3>
-        <Filename Value="mainfrm.pas"/>
-        <Caret Line="35" Column="21" TopLine="3"/>
+        <Filename Value="..\pxvec2d.pas"/>
+        <Caret Line="121" TopLine="106"/>
       </Position3>
       <Position4>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="10" Column="7"/>
+        <Caret Line="122" TopLine="106"/>
       </Position4>
       <Position5>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="12" Column="19"/>
+        <Caret Line="123" TopLine="106"/>
       </Position5>
       <Position6>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="15" Column="13"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="83" TopLine="65"/>
       </Position6>
       <Position7>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="13" Column="12"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="84" TopLine="65"/>
       </Position7>
       <Position8>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="14" Column="43"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="87" TopLine="65"/>
       </Position8>
       <Position9>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="15" Column="11"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="78" TopLine="65"/>
       </Position9>
       <Position10>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="17" Column="7"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="79" TopLine="65"/>
       </Position10>
       <Position11>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="15" Column="12"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="80" TopLine="65"/>
       </Position11>
       <Position12>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="14" Column="43"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="67" Column="39" TopLine="57"/>
       </Position12>
       <Position13>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="11" Column="30"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="68" TopLine="44"/>
       </Position13>
       <Position14>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="13" Column="18"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="69" TopLine="45"/>
       </Position14>
       <Position15>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="17" Column="36"/>
+        <Caret Line="25" Column="29" TopLine="3"/>
       </Position15>
       <Position16>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="13" Column="29"/>
+        <Caret Line="44" Column="15" TopLine="25"/>
       </Position16>
       <Position17>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="28" Column="13"/>
+        <Caret Line="48" Column="13" TopLine="28"/>
       </Position17>
       <Position18>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="17" Column="9"/>
+        <Caret Line="77" Column="16" TopLine="61"/>
       </Position18>
       <Position19>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="37" Column="23" TopLine="3"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="57" Column="19" TopLine="54"/>
       </Position19>
       <Position20>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="17" Column="22"/>
+        <Caret Line="48" Column="15" TopLine="42"/>
       </Position20>
       <Position21>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="34" Column="3" TopLine="3"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="70" Column="74" TopLine="46"/>
       </Position21>
       <Position22>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="17" Column="38"/>
+        <Caret Line="45" Column="48" TopLine="19"/>
       </Position22>
       <Position23>
-        <Filename Value="mainfrm.pas"/>
-        <Caret Line="41" Column="21" TopLine="9"/>
+        <Filename Value="..\pxvec2d.pas"/>
+        <Caret Line="22" Column="51" TopLine="12"/>
       </Position23>
       <Position24>
-        <Filename Value="mainfrm.pas"/>
-        <Caret Line="38" TopLine="24"/>
+        <Filename Value="..\pxvec2d.pas"/>
+        <Caret Line="67" Column="20" TopLine="48"/>
       </Position24>
       <Position25>
         <Filename Value="mainfrm.pas"/>
-        <Caret Line="39" TopLine="24"/>
+        <Caret Line="73" Column="66" TopLine="50"/>
       </Position25>
       <Position26>
-        <Filename Value="mainfrm.pas"/>
-        <Caret Line="40" TopLine="24"/>
+        <Filename Value="..\pxvec2d.pas"/>
+        <Caret Line="24" Column="51" TopLine="12"/>
       </Position26>
       <Position27>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="18" Column="37" TopLine="7"/>
+        <Caret Line="67" Column="22" TopLine="40"/>
       </Position27>
       <Position28>
-        <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="17" Column="48" TopLine="7"/>
+        <Filename Value="mainfrm.pas"/>
+        <Caret Line="75" Column="42" TopLine="57"/>
       </Position28>
       <Position29>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="18" Column="26" TopLine="9"/>
+        <Caret Line="82" Column="14" TopLine="58"/>
       </Position29>
       <Position30>
         <Filename Value="..\pxvec2d.pas"/>
-        <Caret Line="40" Column="3" TopLine="31"/>
+        <Caret Line="18" Column="17" TopLine="12"/>
       </Position30>
     </JumpHistory>
   </ProjectSession>
