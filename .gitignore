@@ -1,2 +1,7 @@
 test-pxvec2d/lib/
 test-pxvec2d/backup/
+.~?~
+*.~1~
+.~*~
+*.~3~
+*.~2~

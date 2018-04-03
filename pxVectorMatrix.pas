@@ -57,11 +57,11 @@ type
     function MakePolar( ang, module:single):TVector;              //coordenadas polares
     //Simple math
     function  Add( const v1, v2 :TVector ):TVector;
-    procedure AddMe( var v1:TVector; const v2:TVector);
+    procedure AddMe( var v1:TVector; const v2:TVector); inline;
     function  Sub( const v1, v2 :TVector):TVector;
     procedure SubMe( var v1:TVector; const v2:TVector);
     function  Scale(const v1:TVector; const val:single):TVector;
-    procedure ScaleMe(var v1:TVector; const val:single);
+    procedure ScaleMe(var v1:TVector; const val:single); inline;
     procedure Invert(var v1:TVector );                            // -Vector
     function  Inverted(const v1:TVector ):TVector;
     //multiply
