@@ -52,7 +52,7 @@ type
 
   procedure vecRotate(vecs :PVec2d; count :integer; rad:single);overload;
   procedure vecRotate(const vecs :TVec2DArray; rad : single );overload;
-//TODO array of PVec2d
+  procedure vecRotate(const vecs :TPVec2dArray; rad : single);overload;
   function vecAverage(vecs :PVec2d; count :integer):TVec2d;overload;
   function vecAverage(const vecs :TVec2DArray ):TVec2d;overload;
 //TODO array of PVec2d
@@ -102,6 +102,26 @@ begin
   end;
 end;
 
+{Rotate vectors in array of pointer to vectros PVec2d }
+procedure vecRotate(const vecs:TPVec2dArray; rad : single);overload;
+var
+  cosRad: single;
+  sinRad: single;
+  i: Integer;
+  tx:single;
+  v :PVec2d;
+begin
+  cosRad := cos(rad);
+  sinRad := sin(rad);
+  for i := 0 to High(vecs) do
+  begin
+    v := vecs[i];
+    tx := v.x;
+    v.x := v.x * cosRad - v.y * sinRad;
+    v.y := tx * sinRad + v.y * cosRad;
+  end;
+end;
+
 {calc average of a mem consecutive group of vectors starting with a pointer to the first one }
 function vecAverage(vecs :PVec2d; count :integer):TVec2d;overload ;
 var
@@ -145,14 +165,20 @@ end;
 procedure TVec2d.rotate( rad :single );
 var
   tx :single;
+  cosRad: single;
+  sinRad: single;
 begin
   tx := x;
+  cosRad := cos(rad); sinRad := sin(rad);
   x := x * cos(rad) - y * sin(rad);
   y := tx * sin(rad) + y * cos(rad);
 end;
 
 function TVec2d.rotated( rad :single ):TVec2d;
+var
+  cosRad, sinRad :single;
 begin
+  cosRad := cos(rad); sinRad := sin(rad);
   result.x := x * cos(rad) - y * sin(rad);
   result.y := x * sin(rad) + y * cos(rad);
 end;
