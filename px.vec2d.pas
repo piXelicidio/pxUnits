@@ -5,7 +5,7 @@ interface
 uses sysutils;
 
 const
-  singleSimilarity = 0.000001;
+  singleMaxDifference = 0.000001;
 
 type
 
@@ -170,17 +170,17 @@ var
 begin
   tx := x;
   cosRad := cos(rad); sinRad := sin(rad);
-  x := x * cos(rad) - y * sin(rad);
-  y := tx * sin(rad) + y * cos(rad);
+  x := x * cosRad - y * sinRad;
+  y := tx * sinRad + y * cosRad;
 end;
 
 function TVec2d.rotated( rad :single ):TVec2d;
 var
   cosRad, sinRad :single;
 begin
-  cosRad := cos(rad); sinRad := sin(rad);
-  result.x := x * cos(rad) - y * sin(rad);
-  result.y := x * sin(rad) + y * cos(rad);
+  cosRad := cos(rad); sinRad := sin(Rad);
+  result.x := x * cosRad - y * sinRad;
+  result.y := x * sinRad + y * cosRad;
 end;
 
 
@@ -298,7 +298,7 @@ end;
 
 class operator TVec2d.equal(const a, b :TVec2d ) :boolean;
 begin
-  result := (abs(a.x - b.x) < singleSimilarity) and (abs(a.y - b.y) < singleSimilarity);
+  result := (abs(a.x - b.x) < singleMaxDifference) and (abs(a.y - b.y) < singleMaxDifference);
 end;
 
 class operator TVec2d.multiply (const a :TVec2d; s :single):TVec2d;
