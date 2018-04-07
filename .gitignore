@@ -6,3 +6,4 @@ test-pxvec2d/backup/
 *.~3~
 *.~2~
 __history/
+*.dcu
