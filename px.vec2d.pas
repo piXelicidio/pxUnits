@@ -2,14 +2,17 @@ unit px.vec2d;
 
 interface
 
-uses sysutils;
+uses sysutils, system.math;
 
 const
   singleMaxDifference = 0.000001;
 
 type
 
-
+  TVec2di = record
+    x,y :integer;
+    class operator equal(const a, b :TVec2di ):boolean;inline;
+  end;
 
   { TVec2d }
   PVec2d = ^TVec2d;
@@ -31,6 +34,8 @@ type
       procedure normalize;inline;
       procedure rotate( rad :single );inline;
       function rotated( rad :single ):TVec2d;inline;
+      function rounded:TVec2di;inline;
+      function floored:TVec2di;inline;
       class operator add(const a, b: TVec2d):TVec2d;inline;
       class operator add(const a :TVec2d; s :single):TVec2d;inline;
       class operator add(s :string; const b :TVec2d):string;
@@ -184,6 +189,13 @@ begin
 end;
 
 
+function TVec2d.rounded: TVec2di;
+begin
+  result.x := round(x);
+  result.y := round(y);
+end;
+
+
 function TVec2d.normalized:TVec2d;
 var
   l :single;
@@ -301,10 +313,23 @@ begin
   result := (abs(a.x - b.x) < singleMaxDifference) and (abs(a.y - b.y) < singleMaxDifference);
 end;
 
+function TVec2d.floored: TVec2di;
+begin
+  result.x := floor(x);
+  result.y := floor(y);
+end;
+
 class operator TVec2d.multiply (const a :TVec2d; s :single):TVec2d;
 begin
   result.x := a.x * s;
   result.y := a.y * s;
+end;
+
+{ TVec2di }
+
+class operator TVec2di.equal(const a, b: TVec2di): boolean;
+begin
+  result := (a.x = b.x) and (a.y = b.y );
 end;
 
 end.
