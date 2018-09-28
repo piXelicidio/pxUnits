@@ -52,7 +52,7 @@ type
   TVec2dArray = array of TVec2d;
   TPVec2dArray = array of PVec2d;
 
-  function vec( ax, ay :single ):TVec2d;inline;
+  function vec( ax, ay :single ):TVec2d;overload;inline;
   function vecDir( angle : single):TVec2d;inline;
 
   procedure vecRotate(vecs :PVec2d; count :integer; rad:single);overload;
@@ -70,6 +70,7 @@ begin
   result.x := ax;
   result.y := ay;
 end;
+
 
 function vecDir(angle: single): TVec2d;
 begin
@@ -133,7 +134,7 @@ var
   i: Integer;
   sum: TVec2d;
 begin
-  sum := vec(0,0);
+  sum := vec(0.0,0.0);
   for i := 1 to count do
   begin
     sum.add(vecs^);
