@@ -187,6 +187,7 @@ Type
           procedure PutPixelAlphaClip(x, y:integer; c:longWord);
           procedure PutPixelAlphaTile(x, y:integer; c:longWord);
           function  GetPixelAntiAlpha(x, y:integer; cfondo:LongWord):LongWord; //mmmm... ni te lo imaginas, la operacion contraria a PutPixelAlpha.. WOW!!
+          procedure RemoveMatteBackground( cfondo: LongWord );                //applica AntiAlpha a toda la imagen
           procedure SetAlpha(x,y:integer; alpha:byte);                         //establece alpha,no afecta el color
           procedure SetColor(x,y:integer; c:LongWord);                         //establece color,no afecta el alpha
           procedure CopyAlphaChannel( Source:TDpx );                           //copia el canal alpha de un lao pa otro, OJO, IMAGEN DEL MISMO SIZE
@@ -2028,6 +2029,19 @@ begin
   end;//if
 end;
 
+
+procedure TDpx.RemoveMatteBackground(cfondo: LongWord);
+var
+  i,j:integer;
+  pureColor :LongWord;
+begin
+  for i := 0 to fWidth-1 do
+    for j := 0 to fHeight-1 do
+    begin
+      pureColor := GetPixelAntiAlpha(i,j,cfondo);
+      SetColor(i,j,pureColor);
+    end;
+end;
 
 procedure TDpx.Line(x1, y1, x2, y2: integer; c: LongWord);
 Var

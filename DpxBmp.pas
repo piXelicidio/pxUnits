@@ -19,7 +19,7 @@ Descripción:
 interface
 
 uses
-  windows, Dpx, Graphics, jpeg, sysUtils ;
+  windows, Dpx, Graphics, jpeg, sysUtils, pngimage ;
 
 type
       TRectsArray = array of TRect;
@@ -48,7 +48,9 @@ type
 
         {files loading}
         procedure SaveToBMP( FileName:string );
-        procedure LoadFromFile( FileName:string );   {Supported formats for TPicture, jpg, bmp, wmf, wme, ico}
+        procedure SaveToPNG( FileName:string );
+        procedure LoadFromPNG( FileName:string );
+        procedure LoadFromFile( FileName:string );   {TGA32, and Supported formats for TPicture, PNG, jpg, bmp, wmf, wme, ico}
         property Bitmap:TBitmap read FBackBuffer;
       end;
 
@@ -94,6 +96,39 @@ begin
   Bitmap.SaveToFile(FileName);
   Bitmap.PixelFormat := pf32Bit;
   UpdateScanLines;
+end;
+
+procedure TDpxBmp.SaveToPNG(FileName: string);
+var
+  myPNG :TPngImage;
+  i,j :integer;
+  p,pa :PByte;
+  c:TRGBA;
+begin
+  myPNG := TPngImage.CreateBlank(COLOR_RGBALPHA, 8, FWidth, FHeight );
+
+  for j := 0 to FHeight-1 do
+  begin
+    p := myPng.Scanline[j];
+    pa := PBYTE(myPng.AlphaScanline[j]);
+    for i := 0 to FWidth-1 do
+    begin
+      c.color := GetPixel(i,j);
+      p^ := c.r ;
+      inc(p);
+      p^ := c.g ;
+      inc(p);
+      p^ := c.b;
+
+      pa^ := c.a;
+      inc(p);
+      inc(pa);
+    end;
+
+  end;
+
+  myPNG.SaveToFile(FileName);
+  myPNG.Free;
 end;
 
 procedure TDpxBmp.Show(DC: HDC; x, y: integer);
@@ -173,15 +208,57 @@ var
 begin
   s :=ExtractfileExt(FileName);
   if s='.tga' then LoadFromTGA(FileName) else
-  begin
-    pic := TPicture.Create;
-    pic.LoadFromFile(FileName);
-    ReSize( pic.Width, pic.Height);
-    Bitmap.Canvas.Draw(0,0, pic.Graphic);
-    pic.Free;
-  end;
+    if s='.png' then LoadFromPNG(FileName) else
+    begin
+      pic := TPicture.Create;
+      pic.LoadFromFile(FileName);
+      ReSize( pic.Width, pic.Height);
+      Bitmap.Canvas.Draw(0,0, pic.Graphic);
+      pic.Free;
+    end;
 end;
 
+
+procedure TDpxBmp.LoadFromPNG(FileName: string);
+//asuming PNG 24 bits + AlphaChannel. TODO:FIX for NON-alpha Info dude
+var
+  pic :TPicture;
+  thePng :TPngImage;
+  i,j :integer;
+  p :PByte;  //pixel RGB
+  pa :PByte; //pixel Alpha
+  c :TRGBA;
+
+begin
+  pic := TPicture.Create;
+  pic.LoadFromFile(FileName);
+  thePng := pic.Graphic as TPngImage;
+  ReSize( pic.Width, pic.Height);
+   CLS($0);
+
+  for j := 0 to pic.Height-1 do
+  begin
+    p := thePng.Scanline[j];
+    pa := PBYTE(thePng.AlphaScanline[j]);
+    for i := 0 to pic.width-1 do
+    begin
+      c.r := p^;
+      inc(p);
+      c.g := p^;
+      inc(p);
+      c.b := p^;
+
+      c.a:=pa^;
+      inc(p);
+      inc(pa);
+
+      PutPixel(i,j,c.color);
+    end;
+
+  end;
+//      Bitmap.Canvas.Draw(0,0, pic.Graphic);
+  pic.Free;
+end;
 
 procedure TDpxBmp.SetClippingArea(x1, y1, x2, y2: integer);
 begin
