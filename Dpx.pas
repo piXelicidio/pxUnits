@@ -4,7 +4,7 @@ UNIT: Dpx - DirectPixel32                         (32 bits only)
 AUTHOR: Denys Almaral Rodríguez (piXel)
 EMAIL: pxtracer@gmail.com
 started: jun-2004
-LAST MODIFIED: december-2012
+LAST MODIFIED: december-2016
 
 Descripción:
   Clase para trabajo con pixeles directo en memoria.
@@ -44,7 +44,7 @@ Descripción:
 
 
 interface
-//uses    Windows;   USES NOTHING! SYSTEM.PAS I THINK
+uses   System.Types;
 
 
 const
@@ -81,9 +81,10 @@ Type
       end;
 
       PPt = ^TPt;
-      TPt = record
+      TPt = TPoint;
+      {TPt = record
         x,y :integer
-      end;
+      end;         }
 
       TPtArray = array of TPt;
 
@@ -113,6 +114,7 @@ Type
 
       TOptSprite = class;
 
+      //DPX DPX DPX DPX PDX PDX PDX
       TDpx = Class
         private
           fAlphaTransparentCoords :TPixelSegments;                    //posiciones lineas con alpha blending generadas por ReCalculateAlphaMaskCoords
@@ -141,7 +143,8 @@ Type
           destructor destroy;override;
           {Abstracts}
           procedure UpdateScanlines;virtual;abstract;
-          procedure ReSize( aWidth, aHeight:integer );virtual;                //Update here Width/Height ScanLines pointers;
+          procedure Resize( aWidth, aHeight:integer );virtual;                //Reallocate.Update here Width/Height ScanLines pointers, discards image.
+          procedure StrechTo( dest :TDpx );
           {Low-Level Access }
           function GetScanLinePtr( y: integer ):pointer;
           function GetScanLinePtrA( y: integer ):PDWordArray;
@@ -166,6 +169,7 @@ Type
           procedure Rectangle(x1, y1, x2, y2:integer; c:LongWord);
           {lines}
           procedure Line(x1, y1, x2, y2 :integer; c:LongWord);
+          procedure hLine(x, y, len :integer; c:LongWord );
           procedure LineProc(x1, y1, x2, y2 :integer; c:LongWord; PutPixelProc:TPutPixelProc);
           procedure LineBold(x1, y1, x2, y2 :integer; c:LongWord; thickNess:integer);
           procedure LineSoft(x1, y1, x2, y2 :integer; c:LongWord);
@@ -235,6 +239,7 @@ Type
           property ImgBoundingRect:TRct read fImgBoundingRect;
       end;
 
+    //optimized rater-line sprites.
     TOptSprite = class
     public
       constructor create;
@@ -255,6 +260,7 @@ Type
       property ImgBoundingRect:TRct read fImgBoundingRect;
     end;
 
+    //This one grabs to a portion of any other Dpx;
     TDpxRef = class(TDpx)
     public
       constructor Create;overload;
@@ -275,6 +281,7 @@ Type
       property RefImage:TDpx read fRefImage;
     end;
 
+    //This one allocate its own memory.
     TDpxMem = class(TDpx)
     public
       constructor create;
@@ -299,6 +306,7 @@ Type
      function PtInRct(const Rct: TRct; const P: TPt): Boolean;overload;
      function PtInRct(const Rct: TRct; x,y:integer): Boolean;overload;
      function Pt(x,y:integer):TPt;
+     function Rct(x1, y1, x2, y2: integer):TRct;
 
 implementation
 
@@ -309,7 +317,14 @@ function Pt(x,y:integer):TPt;inline;
 begin
   Result.x :=x;
   Result.y :=y;
+end;
 
+function Rct(x1, y1, x2, y2: integer):TRct;inline;
+begin
+  Result.x1 := x1;
+  Result.y1 := y1;
+  Result.x2 := x2;
+  Result.y2 := y2;
 end;
 
 function PtInRct(const Rct: TRct; const P: TPt): Boolean;
@@ -379,19 +394,20 @@ begin
   Result:=Byte(ARGB shr 24);
 end;
 }
-function ARGB;assembler;
+{function ARGB;assembler;
 asm
-  {AL --> a}
-  {DL --> r}
-  {CL --> g}
-  {pila-> b}   {result EAX}
   SHL   EAX,8
   OR    AL,B
   SHL   EAX,8
   OR    AL,CL
   SHL   EAX,8
   OR    AL,DL;
+end;  }
+function ARGB(a,r,g,b:byte):LongWord;
+begin
+  //TODO: hey!
 end;
+
 
 procedure TDpx.AlhpaDec(decr: byte);
 begin
@@ -715,6 +731,25 @@ begin
   gc:=  ( FScanlines[y] )^[x] ;
    ( FScanlines[y] )^[x] := (gc and $ff000000) or (c and $00ffffff);
 
+end;
+
+procedure TDpx.StrechTo(dest: TDpx);
+var
+  i, j :integer;
+  xs, ys :single;
+  x,y:integer;
+begin
+  //slow first
+  //no filtering
+  xs := fWidth / dest.Width;
+  ys := fHeight / dest.Height;
+  for j := 0 to dest.Height-1 do
+    for i := 0 to dest.Width-1 do
+    begin
+      x := trunc(i * xs);
+      y := trunc(j * ys);
+      dest.PutPixel(i,j, getPixel(x,y));
+    end;
 end;
 
 {Afecta el pixel solo en los bits que son 1 en la mascara}
@@ -1613,6 +1648,20 @@ begin
   Result := FScanLines[y];
 end;
 
+procedure TDpx.hLine(x, y, len: integer; c: LongWord);
+var
+  P :PLongWord;
+  i :integer;
+begin
+  P:=PLongWord(FScanLines[y]);
+  inc(P, x);
+  for i:=0 to len-1 do
+  begin
+    P^:=c;
+    inc(P);
+  end;
+end;
+
 function TDpx.GetScanLinePtr(y: integer): pointer;
 begin
   Result := FScanLines[y];
@@ -1925,12 +1974,7 @@ var
   P :PLongWord;
   i,j :integer;
 begin
-  //Este código lo hize en ensamblador y según las pruebas
-  //resultó ser mas lento mi código ASM que el codigo optimizado que
-  //genera el compilador de delphi!! wow!
-  //aunque.. quien dijo que yo le meto tanto al ASM
-  //Antes usaba While ahora con for y inc(pointer) aumentó la
-  //velócidad en un 20%
+  //TODO: Try some fillMem, benchmark;
   for j:=y1 to y2 do
   begin
     P:=PLongWord(FScanLines[j]);
@@ -2044,6 +2088,9 @@ begin
 end;
 
 procedure TDpx.Line(x1, y1, x2, y2: integer; c: LongWord);
+//This bresh algorithm is and old code was from SWAG archive with some modifications
+//TODO: locate and give credit
+
 Var
   LgDelta, ShDelta, LgStep, ShStep, Cycle: Integer;
   t:integer;
