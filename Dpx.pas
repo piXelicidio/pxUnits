@@ -1,10 +1,10 @@
 unit Dpx;
 {
-UNIT: Dpx - DirectPixel32                         (32 bits only)
+UNIT: Dpx - DirectPixel32                         (32 bits only ARGB)
 AUTHOR: Denys Almaral Rodríguez (piXel)
 EMAIL: pxtracer@gmail.com
 started: jun-2004
-LAST MODIFIED: december-2016
+LAST MODIFIED: june-2019
 
 Descripción:
   Clase para trabajo con pixeles directo en memoria.
@@ -69,15 +69,17 @@ Type
 
       TPixelSegm = record
         x, y, cantx4 :integer;
+        public
+          constructor create(ax, ay, pixels :integer );
       end;
 
       TPixelSegments = array of TPixelSegm;
 
-      PRGBA = ^TRGBA;
-      TRGBA = record
+      PARGB = ^TARGB;
+      TARGB = record
         case integer of
             0: (color   :LongWord );
-            1: (r,g,b,a :byte );
+            1: (b,g,r,a :byte );
       end;
 
       PPt = ^TPt;
@@ -114,7 +116,7 @@ Type
 
       TOptSprite = class;
 
-      //DPX DPX DPX DPX PDX PDX PDX
+      //------------------------DPX DPX DPX DPX PDX PDX PDX    ---------------
       TDpx = Class
         private
           fAlphaTransparentCoords :TPixelSegments;                    //posiciones lineas con alpha blending generadas por ReCalculateAlphaMaskCoords
@@ -138,6 +140,7 @@ Type
           procedure yLineCutting( y1, y2:integer; var yCut1, yCut2:integer);  //clippinga a lineas verticales
           function CalcBoundingRect( ca :TPixelSegments ):TRct;                     //halla el boundingRect segun los TPixelSegments de optimización
         public
+          opaqueHint :boolean ;                                               //opaqueHint; user hint ignored by all methonds, use to express a wish of using alphablending or not when drawing this image, default = true;
           {inicializacionnes}
           constructor Create;
           destructor destroy;override;
@@ -146,15 +149,15 @@ Type
           procedure Resize( aWidth, aHeight:integer );virtual;                //Reallocate.Update here Width/Height ScanLines pointers, discards image.
           procedure StrechTo( dest :TDpx );
           {Low-Level Access }
-          function GetScanLinePtr( y: integer ):pointer;
-          function GetScanLinePtrA( y: integer ):PDWordArray;
-          function GetPtr( x,y:integer ):pointer;
-          function GetPtrA( x,y:integer ):PDWordArray;
+          function GetScanLinePtr( y: integer ):pointer;inline;
+          function GetScanLinePtrA( y: integer ):PDWordArray;inline;
+          function GetPtr( x,y:integer ):pointer;inline;
+          function GetPtrA( x,y:integer ):PDWordArray;inline;
           {PutPixels}
-          procedure PutPixel(x, y:integer; c:LongWord );                     //oh!! the epic putpixel!!!
+          procedure PutPixel(x, y:integer; c:LongWord );inline;                     //oh!! the epic putpixel!!!
           procedure PutPixelClip(x,y:integer; c:LongWord );                  //clipped putpixel
           procedure PutPixelTile(x,y:integer; c:LongWord );                  //Pixel Mosaico, si las coordenadas se salen del clipping area el pixel se repite cíclicamente... lo cojes?
-          function  GetPixel(x, y:integer ):LongWord;                        //oh!! el getpixel
+          function  GetPixel(const x, y:integer ):LongWord;inline;                        //oh!! el getpixel
           function  GetPixelClip(x,y:integer):LongWord;
           function  GetPixelTile(x,y:integer):LongWord;                      //..
           procedure PutPixelbuffer(x, y:integer; var buffer; pixelsCount:integer); //dibuja un buffer de pixeles...
@@ -170,6 +173,9 @@ Type
           {lines}
           procedure Line(x1, y1, x2, y2 :integer; c:LongWord);
           procedure hLine(x, y, len :integer; c:LongWord );
+          procedure hLineAlpha(x, y, len :integer; c:LongWord );
+          procedure hLinePattern(x, y, len :integer; pat:TDpx );
+          procedure hLinePatternAlpha(x, y, len :integer; pat:TDpx);
           procedure LineProc(x1, y1, x2, y2 :integer; c:LongWord; PutPixelProc:TPutPixelProc);
           procedure LineBold(x1, y1, x2, y2 :integer; c:LongWord; thickNess:integer);
           procedure LineSoft(x1, y1, x2, y2 :integer; c:LongWord);
@@ -187,7 +193,8 @@ Type
           procedure GetImage(x,y:integer; Source:TDpx);overload;
 
           {alphablending}
-          procedure PutPixelAlpha(x, y:integer; c:longWord);{alpha 8 MSBs }   //pixel con alpha blending
+          procedure PutPixelAlpha(const x, y:integer;const c:longWord);inline;{alpha 8 MSBs }   //pixel con alpha blending
+          procedure AlphaBlend(const dst:PARGB; const src:PARGB);inline;  //bland the color c over pixel pointed by PLongWord;
           procedure PutPixelAlphaClip(x, y:integer; c:longWord);
           procedure PutPixelAlphaTile(x, y:integer; c:longWord);
           function  GetPixelAntiAlpha(x, y:integer; cfondo:LongWord):LongWord; //mmmm... ni te lo imaginas, la operacion contraria a PutPixelAlpha.. WOW!!
@@ -199,11 +206,13 @@ Type
           procedure BuildAlphaFromIntensityOf( Source:TDpx );                  //genera alpha de la intesidad de color de otra imagen, OJO, IMAGEN DEL MISMO SIZE
           procedure BuildAlphaFromRedChannelOf( Source:TDpx );                 //genera alpha de intesidad del canal rojo de otra imagen, (util para imagenes mascara blaco y negro)
           procedure PutImageTransp(x,y:integer; const alpha:byte; Source:TDpx);       //imagen con un alpha total
-          procedure PutImageApha(x,y:integer; Source:TDpx);                   //imagen con alpha por pixel
+          procedure PutImageAlpha(x,y:integer; Source:TDpx);                   //imagen con alpha por pixel
           procedure PutImageAlphaClip(x,y:integer;  Source:TDpx; alpha: byte);
           procedure PutImageTranspClip(x,y:integer; Source:TDpx);
+          function CheckIfOpaque( aMaxAlpha :byte ):boolean;                   //return true if all image pixes.alpha >  aMaxAlpha
           {Alphablending Optimized!! 3.5 times FASTER!}
           procedure PreOptimizeAlpha(MinAlpha :byte=10; MaxAlpha :byte=250);     {recomendado 10 - 250} //Recalcula las lineas transparentes y opacas de la imagen para el !!!
+          procedure SetCustomOptimization(const alphaCoords: TPixelSegments; const opaqueCoords: TPixelSegments );
           function  CreateOptSprite(MinAlpha :byte=10; MaxAlpha :byte=250): TOptSprite;
           procedure PutImageAlphaOpt( x,y:integer; Source:TDpx);overload;              //  el Source es el que debe estar optimizado offcourse
           procedure PutImageAlphaOpt(x,y:integer; Source:TOptSprite);overload;
@@ -233,6 +242,7 @@ Type
           procedure LoadFromTGA( FileData:Pointer );overload;                 //carga un TGA, con RLE o no, pero solo de 32bits de memoria
           {filters}
           {properties}
+
           property Height:integer read FHeight;
           property Width:integer read FWidth;
           property AlphaOptimized:boolean read fAlphaOptimized;
@@ -296,10 +306,10 @@ Type
     end;
 
      //funcioncitas útiles e interezantes...
-     function ARGB(a,r,g,b:byte):LongWord;
-     function InterColor(c1,c2:TRGBA; Tendencia:single=0.5):TRGBA;{tendecia de 0.0 a 1.0} //color intermedio entre dos colores dada una tendencia
-     function AverageColors(Colors:array of LongWord):TRGBA;      //promedia colores
-     function difference(c1,c2:TRGBA):integer;overload;                    //cuan diferentes son dos colores, Result=0 identicos, mientras mayor Result, mas diferentes
+     function ARGB(const a,r,g,b :Byte):LongWord;inline;
+     function InterColor(c1,c2:TARGB; Tendencia:single=0.5):TARGB;{tendecia de 0.0 a 1.0} //color intermedio entre dos colores dada una tendencia
+     function AverageColors(Colors:array of LongWord):TARGB;      //promedia colores
+     function difference(c1,c2:TARGB):integer;overload;                    //cuan diferentes son dos colores, Result=0 identicos, mientras mayor Result, mas diferentes
      function difference(c1,c2:LongWord):integer;overload;
 
      //rectángulos y puntos
@@ -339,7 +349,7 @@ begin
     and (Y < Rct.y2);
 end;
 
-function difference(c1,c2:TRGBA):integer;inline;
+function difference(c1,c2:TARGB):integer;inline;
 begin
   Result:=
    abs(c2.b - c1.b) +
@@ -351,17 +361,17 @@ end;
 function difference(c1,c2:LongWord):integer;inline;
 begin
   Result:=
-   abs(TRGBA(c2).b - TRGBA(c1).b) +
-   abs(TRGBA(c2).g - TRGBA(c1).g) +
-   abs(TRGBA(c2).r - TRGBA(c1).r) +
-   abs(TRGBA(c2).a - TRGBA(c1).a);
+   abs(TARGB(c2).b - TARGB(c1).b) +
+   abs(TARGB(c2).g - TARGB(c1).g) +
+   abs(TARGB(c2).r - TARGB(c1).r) +
+   abs(TARGB(c2).a - TARGB(c1).a);
 end;
 
 
-function AverageColors(Colors:array of LongWord):TRGBA;
+function AverageColors(Colors:array of LongWord):TARGB;
 var
   sumR, sumG, sumB, sumA :integer;
-  c1   :TRGBA;
+  c1   :TARGB;
   cant,i  :integer;
 begin
   sumR:=0; sumG:=0; sumB:=0; sumA:=0;
@@ -380,7 +390,7 @@ begin
   Result.b:= sumB div cant;
 end;
 
-function InterColor(c1,c2:TRGBA; Tendencia:single):TRGBA;inline;
+function InterColor(c1,c2:TARGB; Tendencia:single):TARGB;inline;
 begin
   Result.a:=Round(c1.a + (c2.a-c1.a)*Tendencia);
   Result.r:=Round(c1.r + (c2.r-c1.r)*Tendencia);
@@ -403,9 +413,16 @@ asm
   SHL   EAX,8
   OR    AL,DL;
 end;  }
-function ARGB(a,r,g,b:byte):LongWord;
+function ARGB(const a,r,g,b:byte):LongWord;
+var
+  cl :TARGB;
 begin
   //TODO: hey!
+  cl.a := a;
+  cl.r := r;
+  cl.g := g;
+  cl.b := b;
+  result := cl.color;
 end;
 
 
@@ -414,10 +431,10 @@ begin
 
 end;
 
-procedure TDpx.PutImageApha(x, y: integer; Source: TDpx);
+procedure TDpx.PutImageAlpha(x, y: integer; Source: TDpx);
 var
   i,j:integer;
-  src,dst:PRGBA;
+  src,dst:PARGB;
 begin
   for j:=0 to Source.Height-1 do
   begin
@@ -441,7 +458,7 @@ end;
 procedure TDpx.PutImageTransp(x, y:integer; const alpha:byte; Source: TDpx);
 var
   i,j:integer;
-  src, dst :PRGBA;
+  src, dst :PARGB;
 begin
 
   for j:=0 to Source.Height-1 do
@@ -465,10 +482,10 @@ begin
 end;
 
 
-procedure TDpx.PutPixelAlpha(x, y: integer; c: longWord);
+procedure TDpx.PutPixelAlpha(const x, y: integer;const c: longWord);
 var
-  dst:PRGBA;
-  src:TRGBA;
+  dst:PARGB;
+  src:TARGB;
 begin
     src.color := c;
     dst := @( (FScanLines[y])[x]);
@@ -483,25 +500,25 @@ end;
 
 procedure TDpx.SetAlpha(x, y: integer; alpha: byte);
 begin
-  PRGBA(  ( FScanlines[y] )^[x] ).a := alpha
+  PARGB(  ( FScanlines[y] )^[x] ).a := alpha
 end;
 
 function TDpx.GetPixelAntiAlpha(x, y: integer;   cfondo: LongWord): LongWord;
 var
-  n:TRGBA;
+  n:TARGB;
   rn,gn,bn :byte;
   rf,gf,bf :byte;
   rc,gc,bc:integer;
   alpha:byte;
 begin
-  n:=TRGBA(getpixel(x,y));
+  n:=TARGB(getpixel(x,y));
   alpha:=n.a;
   rn:=n.r;
   gn:=n.g;
   bn:=n.b;
-  rf:=TRGBA(cfondo).r;
-  gf:=TRGBA(cfondo).g;
-  bf:=TRGBA(cfondo).b;
+  rf:=TARGB(cfondo).r;
+  gf:=TARGB(cfondo).g;
+  bf:=TARGB(cfondo).b;
   if alpha<>0 then
   begin
     rc:=rf+((rn-rf)*255) div alpha;
@@ -642,7 +659,7 @@ begin
 end;
 
 
-function TDpx.GetPixel(x,y:integer): LongWord;
+function TDpx.GetPixel(const x,y:integer): LongWord;
 begin
   result:=  ( FScanlines[y] )^[x] ;
 end;
@@ -733,6 +750,29 @@ begin
 
 end;
 
+{
+ define the alphablending segments and opaque segments to be
+ drawn by optimized put-images
+}
+procedure TDpx.SetCustomOptimization(const alphaCoords,
+  opaqueCoords: TPixelSegments);
+var
+ r1, r2 :TRct;
+begin
+  fAlphaTransparentCoords := alphaCoords;
+  fAlphaOpaqueCoords := opaqueCoords;
+    //Bounding Rect;
+  R1 := CalcBoundingRect(fAlphaTransparentCoords);
+  R2 := CalcBoundingRect(fAlphaOpaqueCoords);
+  if R2.x1 < R1.x1 then R1.x1 := R2.x1;
+  if R2.x2 > R1.x2 then R1.x2 := R2.x2;
+  if R2.y1 < R1.y1 then R1.y1 := R2.y1;
+  if R2.y2 > R1.y2 then R1.y2 := R2.y2;
+
+  fImgBoundingRect := R1;
+  fAlphaOptimized := true;
+end;
+
 procedure TDpx.StrechTo(dest: TDpx);
 var
   i, j :integer;
@@ -752,7 +792,15 @@ begin
     end;
 end;
 
-{Afecta el pixel solo en los bits que son 1 en la mascara}
+
+procedure TDpx.AlphaBlend(const dst:PARGB; const src: PARGB);
+begin
+    dst.r:=dst.r + ( ( src.a * ( src.r - dst.r + 1 ) ) shr 8);
+    dst.g:=dst.g + ( ( src.a * ( src.g - dst.g + 1 ) ) shr 8);
+    dst.b:=dst.b + ( ( src.a * ( src.b - dst.b + 1 ) ) shr 8);
+    if (dst.a+ src.a)>255 then dst.a:=255 else dst.a:=dst.a + src.a;
+end;
+
 procedure TDpx.BitsSet(x, y: integer; c, bitmask: LongWord);
 var
   gc:LongWord;
@@ -763,7 +811,7 @@ end;
 
 function TDpx.GetPixelInterpLineal(const x, y: single): LongWord;
 var
-  c1,c2,cA,cB,cR   :TRGBA;
+  c1,c2,cA,cB,cR   :TARGB;
   x1, y1   :integer;
   x2,y2 :integer;
   tendx,
@@ -792,7 +840,7 @@ end;
 
 function TDpx.GetPixelInterpClip(x, y: single): LongWord;
 var
-  c1,c2,cA,cB,cR   :TRGBA;
+  c1,c2,cA,cB,cR   :TARGB;
   x1,x2,
   y1,y2   :integer;
   tendx,
@@ -859,6 +907,7 @@ end;
 constructor TDpx.Create;
 begin
   fAlphaOptimized := false;
+  opaqueHint := true;
 end;
 
 procedure TDpx.GetImageClip(x, y: integer; Source: TDpx);
@@ -900,7 +949,7 @@ end;
 procedure TDpx.PutPixelAlphaClip(x, y: integer; c: longWord);
 var
   src,
-  dst :PRGBA;
+  dst :PARGB;
 begin
   if (x>=FX1Clip) then
     if (x<=FX2Clip) then
@@ -923,7 +972,7 @@ var
   i,j:integer;
   xcut1,xcut2,
   ycut1,ycut2 :integer;
-  src,dst:PRGBA;
+  src,dst:PARGB;
 begin
   xLineCutting(x,x+Source.Width-1, xcut1, xcut2);
   yLineCutting(y,y+Source.Height-1, ycut1, ycut2);
@@ -968,7 +1017,7 @@ var
   i,j:integer;
   xcut1,xcut2,
   ycut1,ycut2 :integer;
-  src,dst:PRGBA;
+  src,dst:PARGB;
 begin
   xLineCutting(x,x+Source.Width-1, xcut1, xcut2);
   yLineCutting(y,y+Source.Height-1, ycut1, ycut2);
@@ -1141,7 +1190,7 @@ function TDpx.PixelTestOpaque(c: LongWord): boolean;
 var
   alpha :byte;
 begin
-  alpha:= TRGBA(c).a;
+  alpha:= TARGB(c).a;
   Result := alpha >= MaxAlphaTmp;
 end;
 
@@ -1149,7 +1198,7 @@ function TDpx.PixelTestTransparent(c: LongWord): boolean;
 var
   alpha :byte;
 begin
- alpha:=TRGBA(c).a;
+ alpha:=TARGB(c).a;
  Result := (alpha >= MinAlphaTmp) and (alpha<MaxalphaTmp);
 end;
 
@@ -1157,7 +1206,7 @@ procedure TDpx.PutImageAlphaOpt(x, y: integer; Source: TDpx);
 var
   i,j :integer;
   seginf  :TPixelSegm;
-  src,dst :PRGBA;
+  src,dst :PARGB;
 begin
 
   for i:=0 to high(Source.fAlphaOpaqueCoords) do
@@ -1325,7 +1374,7 @@ var
   xcut1, xcut2  :integer;
   ycut1, ycut2  :integer;
   cant  :integer;
-  src,dst :PRGBA;
+  src,dst :PARGB;
 begin
   //hago el clipping primero al ImgBoundingRect
   with Source.ImgBoundingRect do
@@ -1487,7 +1536,7 @@ end;
 procedure TDpx.ColorTint(x, y: integer; tintColor: LongWord);
 var
   bwlevel  :byte;
-  res :^TRGBA;
+  res :^TARGB;
   rs,gs,bs  :integer;
   overflow  :integer;
 begin
@@ -1498,9 +1547,9 @@ begin
   bwlevel := (res^.r + res^.g + res^.b) div 3;
 
   //llevo el source de 0-2 y lo multimplico por el tint.color
-  rs := (bwlevel * TRGBA(tintColor).r) div 128;
-  gs := (bwlevel * TRGBA(tintColor).g) div 128; //optimized
-  bs := (bwlevel * TRGBA(tintColor).b) div 128;
+  rs := (bwlevel * TARGB(tintColor).r) div 128;
+  gs := (bwlevel * TARGB(tintColor).g) div 128; //optimized
+  bs := (bwlevel * TARGB(tintColor).b) div 128;
 
   //the color overflow
   overflow := 0;
@@ -1549,19 +1598,19 @@ begin
   for y:=0 to Height-1 do
     for x:=0 to Width-1 do
     begin
-      TRGBA(  (FScanLines[y])[x] ).a := TRGBA(  (Source.FScanLines[y])[x] ).a;
+      TARGB(  (FScanLines[y])[x] ).a := TARGB(  (Source.FScanLines[y])[x] ).a;
     end;
 end;
 
 procedure TDpx.BuildAlphaFromIntensity;
 var
-  c :TRGBA;
+  c :TARGB;
   x,y :integer;
 begin
   for y:=0 to height-1 do
     for x:=0 to width-1 do
     begin
-       c := TRGBA (  (FScanLines[y])[x] );
+       c := TARGB (  (FScanLines[y])[x] );
        //TODO: They says this is not the correct calc, but whatever..
        c.a := (c.g + c.r + c.b) div 3;
         (FScanLines[y])[x] := c.color;
@@ -1570,14 +1619,14 @@ end;
 
 procedure TDpx.BuildAlphaFromIntensityOf(Source: TDpx);
 var
-  c :TRGBA;
+  c :TARGB;
   x,y :integer;
 begin
   for y:=0 to height-1 do
     for x:=0 to width-1 do
     begin
-       c := TRGBA (  (Source.FScanLines[y])[x] );
-       TRGBA(  (FScanLines[y])[x] ).a := (c.g + c.r + c.b) div 3;
+       c := TARGB (  (Source.FScanLines[y])[x] );
+       TARGB(  (FScanLines[y])[x] ).a := (c.g + c.r + c.b) div 3;
     end;
 end;
 
@@ -1612,7 +1661,7 @@ end;
 procedure TDpx.PutPixelAlphaTile(x, y: integer; c: longWord);
 var
   src,
-  dst:PRGBA;
+  dst:PARGB;
 begin
  TileXY(x,y);
  begin
@@ -1640,7 +1689,7 @@ var
 begin
   for y:=0 to height-1 do
     for x:=0 to width-1 do
-       PRGBA( @ (FScanLines[y])[x] ).a := PRGBA( @ (Source.FScanLines[y])[x] ).r;
+       PARGB( @ (FScanLines[y])[x] ).a := PARGB( @ (Source.FScanLines[y])[x] ).r;
 end;
 
 function TDpx.GetScanLinePtrA(y: integer):PDWordArray  ;
@@ -1659,6 +1708,53 @@ begin
   begin
     P^:=c;
     inc(P);
+  end;
+end;
+
+procedure TDpx.hLineAlpha(x, y, len: integer; c: LongWord);
+var
+  P :PLongWord;
+  i :integer;
+begin
+  P:=PLongWord(FScanLines[y]);
+  inc(P, x);
+  for i:=0 to len-1 do
+  begin
+    //P^:=c;
+    AlphaBlend(PARGB(P), PARGB(@c));
+    inc(P);
+  end;
+end;
+
+procedure TDpx.hLinePattern(x, y, len: integer; pat: TDpx);
+var
+  pdst :PLongWord;
+  psrc :PDWordArray;
+  i   :integer;
+begin
+  pdst := PLongWord(FScanLines[y]);
+  inc(pdst, x);
+  psrc := pat.GetScanLinePtrA( y mod pat.Height );
+  for i := 0 to len-1 do
+  begin
+    pdst^ := psrc^[ (x + i) mod pat.Width];
+    inc(pdst);
+  end;
+end;
+
+procedure TDpx.hLinePatternAlpha(x, y, len: integer; pat: TDpx);
+var
+  pdst :PLongWord;
+  psrc :PDWordArray;
+  i   :integer;
+begin
+  pdst := PLongWord(FScanLines[y]);
+  inc(pdst, x);
+  psrc := pat.GetScanLinePtrA( y mod pat.Height );
+  for i := 0 to len-1 do
+  begin
+    AlphaBlend(PARGB(pdst), PARGB( @(psrc^[ (x + i) mod pat.Width]) ));
+    inc(pdst);
   end;
 end;
 
@@ -1736,7 +1832,7 @@ procedure TDpx.PutImageAlphaOpt(x, y: integer; Source: TOptSprite);
 var
   i,j :integer;
   seginf    :TPixelSegm;
-  src,dst :PRGBA;
+  src,dst :PARGB;
 begin
 
   for i:=0 to high(Source.fAlphaOpaqueCoords) do
@@ -1775,7 +1871,7 @@ var
   xcut1, xcut2  :integer;
   ycut1, ycut2  :integer;
   cant  :integer;
-  src,dst :PRGBA;
+  src,dst :PARGB;
 begin
   //hago el clipping primero al ImgBoundingRect
   with Source.ImgBoundingRect do
@@ -2522,6 +2618,37 @@ begin
     if (x + cantx4 div 4) > Result.x2 then Result.x2 := (x + cantx4 div 4);
     if (y > Result.y2) then REsult.y2 := y;
   end;
+end;
+
+function TDpx.CheckIfOpaque(aMaxAlpha: byte): boolean;
+var
+  c :PARGB;
+  j: Integer;
+  i: Integer;
+begin
+  Result := true;
+  for j := 0 to fHeight-1 do
+  begin
+    c:= PARGB(FScanLines[j]);
+    for i := 0 to fWidth-1 do
+    begin
+      if c.a<aMaxAlpha then
+      begin
+        Result := false;
+        exit;
+      end;
+      inc(c);
+    end;
+  end;
+end;
+
+{ TPixelSegm }
+
+constructor TPixelSegm.create(ax, ay, pixels: integer);
+begin
+  x := ax;
+  y := ay;
+  cantx4 := pixels * 4;
 end;
 
 end.
