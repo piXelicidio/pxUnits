@@ -103,7 +103,7 @@ var
   myPNG :TPngImage;
   i,j :integer;
   p,pa :PByte;
-  c:TRGBA;
+  c:TARGB;
 begin
   myPNG := TPngImage.CreateBlank(COLOR_RGBALPHA, 8, FWidth, FHeight );
 
@@ -227,7 +227,7 @@ var
   i,j :integer;
   p :PByte;  //pixel RGB
   pa :PByte; //pixel Alpha
-  c :TRGBA;
+  c :TARGB;
 
 begin
   pic := TPicture.Create;

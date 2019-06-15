@@ -174,8 +174,10 @@ Type
           procedure Line(x1, y1, x2, y2 :integer; c:LongWord);
           procedure hLine(x, y, len :integer; c:LongWord );
           procedure hLineAlpha(x, y, len :integer; c:LongWord );
+          procedure hLineAlphaComp(x, y, len :integer; c:LongWord );
           procedure hLinePattern(x, y, len :integer; pat:TDpx );
           procedure hLinePatternAlpha(x, y, len :integer; pat:TDpx);
+          procedure hLinePatternAlphaComp(x, y, len :integer; pat:TDpx);
           procedure LineProc(x1, y1, x2, y2 :integer; c:LongWord; PutPixelProc:TPutPixelProc);
           procedure LineBold(x1, y1, x2, y2 :integer; c:LongWord; thickNess:integer);
           procedure LineSoft(x1, y1, x2, y2 :integer; c:LongWord);
@@ -195,6 +197,7 @@ Type
           {alphablending}
           procedure PutPixelAlpha(const x, y:integer;const c:longWord);inline;{alpha 8 MSBs }   //pixel con alpha blending
           procedure AlphaBlend(const dst:PARGB; const src:PARGB);inline;  //bland the color c over pixel pointed by PLongWord;
+          procedure AlphaBlendComp(const dst:PARGB; const src:PARGB);inline; //Composite version take care of alpha values, NOT assume backround is opaque like standard forumula
           procedure PutPixelAlphaClip(x, y:integer; c:longWord);
           procedure PutPixelAlphaTile(x, y:integer; c:longWord);
           function  GetPixelAntiAlpha(x, y:integer; cfondo:LongWord):LongWord; //mmmm... ni te lo imaginas, la operacion contraria a PutPixelAlpha.. WOW!!
@@ -435,6 +438,7 @@ procedure TDpx.PutImageAlpha(x, y: integer; Source: TDpx);
 var
   i,j:integer;
   src,dst:PARGB;
+  a :single;
 begin
   for j:=0 to Source.Height-1 do
   begin
@@ -442,13 +446,10 @@ begin
     dst  := @ ( FScanlines[y+j] )^[x];
     for i:=0 to Source.Width-1 do
     begin
-        //este código debo repetirlo porque delhi todabía no tiene inline :)
-        //
         dst.r:=dst.r + ( ( src.a * ( src.r - dst.r + 1 ) ) shr 8);
         dst.g:=dst.g + ( ( src.a * ( src.g - dst.g + 1 ) ) shr 8);
         dst.b:=dst.b + ( ( src.a * ( src.b - dst.b + 1 ) ) shr 8);
-        if (dst.a+ src.a)>255 then dst.a:=255 else dst.a:=dst.a + src.a;
-        //
+
         inc(src);
         inc(dst);
     end;
@@ -798,7 +799,14 @@ begin
     dst.r:=dst.r + ( ( src.a * ( src.r - dst.r + 1 ) ) shr 8);
     dst.g:=dst.g + ( ( src.a * ( src.g - dst.g + 1 ) ) shr 8);
     dst.b:=dst.b + ( ( src.a * ( src.b - dst.b + 1 ) ) shr 8);
-    if (dst.a+ src.a)>255 then dst.a:=255 else dst.a:=dst.a + src.a;
+end;
+
+procedure TDpx.AlphaBlendComp(const dst, src: PARGB);
+begin
+  dst.r := (src.a * ( src.r - dst.r )) div (dst.a + src.a) + dst.r;
+  dst.g := (src.a * ( src.g - dst.g )) div (dst.a + src.a) + dst.g;
+  dst.b := (src.a * ( src.b - dst.b )) div (dst.a + src.a) + dst.b;
+  dst.a := dst.a + src.a * ( 255 - dst.a ) * 255
 end;
 
 procedure TDpx.BitsSet(x, y: integer; c, bitmask: LongWord);
@@ -1726,6 +1734,21 @@ begin
   end;
 end;
 
+procedure TDpx.hLineAlphaComp(x, y, len: integer; c: LongWord);
+var
+  P :PLongWord;
+  i :integer;
+begin
+  P:=PLongWord(FScanLines[y]);
+  inc(P, x);
+  for i:=0 to len-1 do
+  begin
+    //P^:=c;
+    AlphaBlendComp(PARGB(P), PARGB(@c));
+    inc(P);
+  end;
+end;
+
 procedure TDpx.hLinePattern(x, y, len: integer; pat: TDpx);
 var
   pdst :PLongWord;
@@ -1754,6 +1777,22 @@ begin
   for i := 0 to len-1 do
   begin
     AlphaBlend(PARGB(pdst), PARGB( @(psrc^[ (x + i) mod pat.Width]) ));
+    inc(pdst);
+  end;
+end;
+
+procedure TDpx.hLinePatternAlphaComp(x, y, len: integer; pat: TDpx);
+var
+  pdst :PLongWord;
+  psrc :PDWordArray;
+  i   :integer;
+begin
+  pdst := PLongWord(FScanLines[y]);
+  inc(pdst, x);
+  psrc := pat.GetScanLinePtrA( y mod pat.Height );
+  for i := 0 to len-1 do
+  begin
+    AlphaBlendComp(PARGB(pdst), PARGB( @(psrc^[ (x + i) mod pat.Width]) ));
     inc(pdst);
   end;
 end;
