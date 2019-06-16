@@ -793,7 +793,7 @@ begin
     end;
 end;
 
-
+//faster: assume destination alpha is 100%
 procedure TDpx.AlphaBlend(const dst:PARGB; const src: PARGB);
 begin
     dst.r:=dst.r + ( ( src.a * ( src.r - dst.r + 1 ) ) shr 8);
@@ -801,12 +801,26 @@ begin
     dst.b:=dst.b + ( ( src.a * ( src.b - dst.b + 1 ) ) shr 8);
 end;
 
+//real composition of two pixels with both alpha composition
 procedure TDpx.AlphaBlendComp(const dst, src: PARGB);
+var
+a1, a2, ar : single;
 begin
-  dst.r := (src.a * ( src.r - dst.r )) div (dst.a + src.a) + dst.r;
+  {dst.r := (src.a * ( src.r - dst.r )) div (dst.a + src.a) + dst.r;
   dst.g := (src.a * ( src.g - dst.g )) div (dst.a + src.a) + dst.g;
   dst.b := (src.a * ( src.b - dst.b )) div (dst.a + src.a) + dst.b;
-  dst.a := dst.a + src.a * ( 255 - dst.a ) * 255
+  dst.a := dst.a + src.a * ( 255 - dst.a ) * 255 }
+
+  //TODO: OPTIMIZE THIS, INTENGERS?  validate ar = 0 ?
+  a1 := dst.a / 255;
+  a2 := src.a / 255;
+
+  ar := a1 + a2 * ( 1 - a1 );
+  dst.a := round( ar * 255 );
+  dst.r := round( (src.r * a2 + (1 - a2) * (dst.r * a1 )) / ar );
+  dst.g := round( (src.g * a2 + (1 - a2) * (dst.g * a1 )) / ar );
+  dst.b := round( (src.b * a2 + (1 - a2) * (dst.b * a1 )) / ar );
+
 end;
 
 procedure TDpx.BitsSet(x, y: integer; c, bitmask: LongWord);
