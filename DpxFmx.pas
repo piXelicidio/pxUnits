@@ -18,6 +18,7 @@ TDpxFmx = class(TDpx)
     procedure Resize(aWidth, aHeight : integer);override;
     procedure UpdateScanlines;override;
     procedure LoadFromFile(const aFileName :string);
+    procedure SaveToFile(const aFileName :string);
     procedure CopyTo( aBitmap:TBitmap );
     {}
     property Surface:TBitmapSurface read fSurface write SetSurface;
@@ -66,6 +67,7 @@ var
   img2 :TBitmapSurface;
 begin
   img := TBitmapSurface.Create;
+  try
     if TBitmapCodecManager.LoadFromFile(aFileName, img) then
     begin
       //convert if pixel format are different
@@ -82,7 +84,10 @@ begin
       fHeight := fSurface.Height;
       fWidth := fSurface.Width;
       UpdateScanlines;
-    end else img.free;
+    end;
+  finally
+    img.Free;
+  end;
 end;
 
 procedure TDpxFmx.Resize(aWidth, aHeight: integer);
@@ -92,6 +97,14 @@ begin
   //else
   fSurface.SetSize(aWidth, aHeight, TPixelFormat.BGRA);
   inherited;
+end;
+
+procedure TDpxFmx.SaveToFile(const aFileName: string);
+begin
+  if TBitmapCodecManager.SaveToFile(aFileName, fSurface) then
+  begin  
+    //good
+  end;
 end;
 
 procedure TDpxFmx.SetSurface(const Value: TBitmapSurface);

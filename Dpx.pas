@@ -209,7 +209,8 @@ Type
           procedure BuildAlphaFromIntensityOf( Source:TDpx );                  //genera alpha de la intesidad de color de otra imagen, OJO, IMAGEN DEL MISMO SIZE
           procedure BuildAlphaFromRedChannelOf( Source:TDpx );                 //genera alpha de intesidad del canal rojo de otra imagen, (util para imagenes mascara blaco y negro)
           procedure PutImageTransp(x,y:integer; const alpha:byte; Source:TDpx);       //imagen con un alpha total
-          procedure PutImageAlpha(x,y:integer; Source:TDpx);                   //imagen con alpha por pixel
+          procedure PutImageAlpha(x,y:integer; Source:TDpx);                   //draw imagen con alpha por pixel
+          procedure PutImageAlphaComp(x,y:integer; Source:TDpx);               //composite imagen with alpha by pixel
           procedure PutImageAlphaClip(x,y:integer;  Source:TDpx; alpha: byte);
           procedure PutImageTranspClip(x,y:integer; Source:TDpx);
           function CheckIfOpaque( aMaxAlpha :byte ):boolean;                   //return true if all image pixes.alpha >  aMaxAlpha
@@ -2012,6 +2013,25 @@ begin
     end;//if seginf
 
   end;//for i
+end;
+
+procedure TDpx.PutImageAlphaComp(x, y: integer; Source: TDpx);
+var
+  i,j:integer;
+  src,dst:PARGB;
+  a :single;
+begin
+  for j:=0 to Source.Height-1 do
+  begin
+    src := @ ( Source.FScanlines[j] )^[0];
+    dst  := @ ( FScanlines[y+j] )^[x];
+    for i:=0 to Source.Width-1 do
+    begin
+        AlphaBlendComp(dst, src);
+        inc(src);
+        inc(dst);
+    end;
+  end;
 end;
 
 { TDpxRef }
